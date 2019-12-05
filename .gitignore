@@ -1,0 +1,33 @@
+
+# Object files
+*.o
+*.ko
+*.obj
+*.elf
+
+# Libraries
+*.lib
+*.a
+
+# Shared objects (inc. Windows DLLs)
+*.dll
+*.so
+#*.so.*
+*.dylib
+
+# Executables
+*.out
+*.app
+*.i*86
+*.x86_64
+*.hex
+*.bak
+*.dep
+
+/Drivers/CMSIS/DSP_Lib
+/Drivers/CMSIS/Lib
+/Drivers/CMSIS/RTOS
+
+/MDK-ARM/DebugConfig
+/MDK-ARM/nrfVCP
+/MDK-ARM/RTE
