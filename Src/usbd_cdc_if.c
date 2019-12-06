@@ -51,7 +51,8 @@
 #include "usbd_cdc_if.h"
 
 /* USER CODE BEGIN INCLUDE */
-
+#include "usart.h"
+#include "tim.h"
 /* USER CODE END INCLUDE */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -61,6 +62,9 @@
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
 extern UART_HandleTypeDef huart2;
+extern TIM_HandleTypeDef htim3;
+extern volatile uint8_t bUartTransmitting;
+
 USBD_CDC_LineCodingTypeDef LineCoding =
   {
     115200, /* baud rate*/
@@ -136,6 +140,7 @@ uint8_t UserRxBufferFS[APP_RX_DATA_SIZE];
 uint8_t UserTxBufferFS[APP_TX_DATA_SIZE];
 
 /* USER CODE BEGIN PRIVATE_VARIABLES */
+
 uint8_t UserRxBuffer[APP_RX_DATA_SIZE];/* Received Data over USB are stored in this buffer */
 uint8_t UserTxBuffer[APP_TX_DATA_SIZE];/* Received Data over UART (CDC interface) are stored in this buffer */
 uint32_t BuffLength;
@@ -143,6 +148,7 @@ uint32_t UserTxBufPtrIn = 0;/* Increment this pointer or roll it back to
                                start address when data are received over USART */
 uint32_t UserTxBufPtrOut = 0; /* Increment this pointer or roll it back to
                                  start address when data are sent over USB */
+								 
 /* USER CODE END PRIVATE_VARIABLES */
 
 /**
@@ -200,10 +206,14 @@ USBD_CDC_ItfTypeDef USBD_Interface_fops_FS =
 static int8_t CDC_Init_FS(void)
 {
   /* USER CODE BEGIN 3 */
-  /* Set Application Buffers */
-  USBD_CDC_SetTxBuffer(&hUsbDeviceFS, UserTxBuffer, 0);
-  USBD_CDC_SetRxBuffer(&hUsbDeviceFS, UserRxBuffer);
-  return (USBD_OK);
+	
+	MX_USART2_UART_Init();
+	MX_TIM3_Init();
+	
+	/* Set Application Buffers */
+	USBD_CDC_SetTxBuffer(&hUsbDeviceFS, UserTxBuffer, 0);
+	USBD_CDC_SetRxBuffer(&hUsbDeviceFS, UserRxBuffer);
+	return (USBD_OK);
   /* USER CODE END 3 */
 }
 
@@ -219,6 +229,9 @@ static int8_t CDC_DeInit_FS(void)
     /* Initialization Error */
     Error_Handler();
   }
+    
+	HAL_TIM_Base_DeInit(&htim3);
+  
   return (USBD_OK);
   /* USER CODE END 4 */
 }
@@ -372,11 +385,16 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
   uint32_t buffptr;
   uint32_t buffsize;
-	//blink per second
+	
 	static uint16_t LEDBlinkCount = 0;
-	if (++LEDBlinkCount > 1000)
+	if (++LEDBlinkCount > 100)		//blink per 100 millisecond
 	{
-		HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
+		if(bUartTransmitting)
+		{
+			HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
+			bUartTransmitting = 0;
+		}
+
 		LEDBlinkCount = 0;
 	}
   

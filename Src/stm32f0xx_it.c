@@ -36,7 +36,7 @@
 #include "stm32f0xx_it.h"
 
 /* USER CODE BEGIN 0 */
-
+volatile uint8_t bUartTransmitting = 0;
 /* USER CODE END 0 */
 
 /* External variables --------------------------------------------------------*/
@@ -166,7 +166,7 @@ void USART2_IRQHandler(void)
   /* USER CODE END USART2_IRQn 0 */
   HAL_UART_IRQHandler(&huart2);
   /* USER CODE BEGIN USART2_IRQn 1 */
-
+	bUartTransmitting = 1;
   /* USER CODE END USART2_IRQn 1 */
 }
 
